@@ -1,5 +1,5 @@
 <template>
-  <div class="feature">
+  <div class="card">
     <h3>{{ title }}</h3>
     <p>{{ description }}</p>
   </div>
@@ -11,11 +11,11 @@ defineProps<{
   description: string
 }>()
 </script>
-
 <style scoped>
-.feature {
+.card {
   padding: 1.5rem;
   border: 1px solid #ddd;
   border-radius: 8px;
+  background: #fff;
 }
 </style>

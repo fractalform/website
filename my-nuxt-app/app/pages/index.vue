@@ -27,20 +27,12 @@
 </template>
 <style scoped>
 .hero {
-  padding: 4rem 2rem;
   text-align: center;
 }
 
 .features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 2rem;
-  padding: 2rem;
-}
-
-.feature {
-  padding: 1.5rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
 }
 </style>
