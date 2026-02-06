@@ -12,10 +12,11 @@ const selectedCategory = computed(
   () => route.query.category as string | undefined
 )
 
-const selectedTags = computed(() => {
+const selectedTags = computed<string[]>(() => {
   const q = route.query.tag
   if (!q) return []
-  return Array.isArray(q) ? q : [q]
+  const raw = Array.isArray(q) ? q : [q]
+  return raw.filter((t): t is string => typeof t === 'string' && t.length > 0)
 })
 
 const filteredPosts = computed(() => {
