@@ -5,12 +5,27 @@ import { posts } from '~/data/posts'
 const route = useRoute()
 const router = useRouter()
 
+const categories = Array.from(new Set(posts.map(p => p.category)))
 const tags = Array.from(new Set(posts.flatMap(p => p.tags))).sort()
 
+const selectedTags = computed(() => {
+  const q = route.query.tag
+  if (!q) return []
+  return Array.isArray(q) ? q : [q]
+})
+
 function toggleTag(tag: string) {
+  const next = selectedTags.value.includes(tag)
+    ? selectedTags.value.filter(t => t !== tag)
+    : [...selectedTags.value, tag]
+
   router.push({
-    query: tag === route.query.tag ? {} : { tag }
+    query: next.length ? { tag: next } : {}
   })
+}
+
+function selectCategory(cat: string) {
+  router.push({ query: { category: cat } })
 }
 </script>
 
@@ -26,35 +41,34 @@ function toggleTag(tag: string) {
             </nav>
       </div>
 
-      <div class="group">
-        <div class="group-title">Categories</div>
-        <button class="pill">UI</button>
-        <button class="pill">Guides</button>
-        <button class="pill">Updates</button>
-      </div>
-
-      <div class="group">
-        <div class="group-title">Tags</div>
-        <div class="pill-row">
-          <button class="pill">nuxt</button>
-          <button class="pill">design</button>
-          <button class="pill">hosting</button>
-        </div>
-      </div>
-
-      <div class="filter-section">
-        <h4>Filter</h4>
+    <div class="filter-section">
+    <details open>
+        <summary>Categories</summary>
 
         <button
-            v-for="tag in tags"
-            :key="tag"
-            class="tag-filter"
-            :class="{ active: route.query.tag === tag }"
-            @click="toggleTag(tag)"
+        v-for="cat in categories"
+        :key="cat"
+        class="filter-btn"
+        @click="selectCategory(cat)"
         >
-            {{ tag }}
+        {{ cat }}
         </button>
-        </div>
+    </details>
+
+    <details open>
+        <summary>Tags</summary>
+
+        <button
+        v-for="tag in tags"
+        :key="tag"
+        class="filter-btn"
+        :class="{ active: selectedTags.includes(tag) }"
+        @click="toggleTag(tag)"
+        >
+        {{ tag }}
+        </button>
+    </details>
+    </div>
     </div>
   </aside>
 </template>
@@ -114,26 +128,36 @@ function toggleTag(tag: string) {
   background: #f3f4f6;
 }
 
-.filter-section {
-  margin-top: 1.5rem;
+.filter-section details {
+  margin-bottom: 1rem;
 }
 
-.filter-section h4 {
-  font-size: 0.85rem;
+.filter-section summary {
+  cursor: pointer;
+  font-size: 0.8rem;
   text-transform: uppercase;
   opacity: 0.6;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
-.tag-filter {
+.filter-btn {
   display: block;
   width: 100%;
-  text-align: left;
   padding: 0.4rem 0.6rem;
+  text-align: left;
   border-radius: 8px;
   border: none;
   background: transparent;
   cursor: pointer;
+}
+
+.filter-btn:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.filter-btn.active {
+  background: rgba(0,0,0,0.1);
+  font-weight: 600;
 }
 
 .tag-filter:hover {

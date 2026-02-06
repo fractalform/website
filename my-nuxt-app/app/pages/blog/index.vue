@@ -7,17 +7,31 @@ useHead({
 })
 
 const route = useRoute()
-const router = useRouter()
 
-const selectedTag = computed(() => route.query.tag as string | undefined)
-
-const allTags = computed(() =>
-  Array.from(new Set(posts.flatMap(p => p.tags))).sort()
+const selectedCategory = computed(
+  () => route.query.category as string | undefined
 )
 
+const selectedTags = computed(() => {
+  const q = route.query.tag
+  if (!q) return []
+  return Array.isArray(q) ? q : [q]
+})
+
 const filteredPosts = computed(() => {
-  if (!selectedTag.value) return posts
-  return posts.filter(p => p.tags.includes(selectedTag.value!))
+  let result = posts
+
+  if (selectedCategory.value) {
+    result = result.filter(p => p.category === selectedCategory.value)
+  }
+
+  if (selectedTags.value.length) {
+    result = result.filter(p =>
+      selectedTags.value.every(tag => p.tags.includes(tag))
+    )
+  }
+
+  return result
 })
 </script>
 
