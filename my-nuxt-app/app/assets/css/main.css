@@ -13,6 +13,7 @@ html {
 body {
   margin: 0;
   color: #222;
+  background: var(--bg);
   background-color: #fafafa;
 }
 
@@ -35,11 +36,23 @@ h3 {
 
 p {
   margin: 0 0 1em 0;
+}
+
+/* Apply readable line length only in article-like areas */
+.prose p {
   max-width: 60ch;
+}
+
+a {
+  color: inherit;
 }
 
 :root {
   --header-h: 75px; /* change this later to whatever feels right */
+  --radius: 14px;
+  --border: #e7e7e7;
+  --bg: #fafafa;
+  --surface: #ffffff;
 }
 
 .container {

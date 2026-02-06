@@ -1,8 +1,8 @@
 <template>
-  <div class="card">
+  <AppCard>
     <h3>{{ title }}</h3>
     <p>{{ description }}</p>
-  </div>
+  </AppCard>
 </template>
 
 <script setup lang="ts">
@@ -11,11 +11,3 @@ defineProps<{
   description: string
 }>()
 </script>
-<style scoped>
-.card {
-  padding: 1.5rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fff;
-}
-</style>

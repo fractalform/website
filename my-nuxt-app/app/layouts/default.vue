@@ -1,3 +1,6 @@
+<script setup lang="ts">
+import { navItems } from '~/data/nav'
+</script>
 <template>
   <div class="app-shell">
     <header class="header-area">
@@ -5,11 +8,10 @@
         <div class="brand">
           <NuxtLink to="/" class="brand-link">My Nuxt Website</NuxtLink>
         </div>
-
         <nav class="top-nav">
-          <NuxtLink to="/" class="link">Home</NuxtLink>
-          <NuxtLink to="/blog" class="link">Blog</NuxtLink>
-          <NuxtLink to="/about" class="link">About</NuxtLink>
+          <NuxtLink v-for="i in navItems" :key="i.to" :to="i.to" class="link">
+            {{ i.label }}
+          </NuxtLink>
         </nav>
       </div>
     </header>
