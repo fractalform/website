@@ -1,9 +1,6 @@
 <template>
-  <AppCard
-    :to="to"
-    class="preview"
-    :class="{ 'no-thumb': !image }"
-  >
+  <AppCard :to="props.to" class="preview" :class="{ 'no-thumb': !props.image }">
+
     <div v-if="image" class="thumb">
       <img :src="image" :alt="title" />
     </div>
@@ -24,11 +21,11 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  to: string
+const props = defineProps<{
+  to?: string
   title: string
-  subtitle?: string
   excerpt: string
+  subtitle?: string
   image?: string
   tags?: string[]
 }>()
@@ -39,6 +36,10 @@ defineProps<{
   display: grid;
   grid-template-columns: 84px minmax(0, 1fr);
   gap: 1rem;
+}
+
+.preview {
+  text-decoration: none;
 }
 
 /* When there is no image, don't reserve the 84px column */

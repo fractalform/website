@@ -5,27 +5,76 @@ import { posts } from '~/data/posts'
 const route = useRoute()
 const router = useRouter()
 
-const categories = Array.from(new Set(posts.map(p => p.category)))
-const tags = Array.from(new Set(posts.flatMap(p => p.tags))).sort()
+// Safe, always-an-object query view
+const query = computed(() => route.query ?? {})
 
-const selectedTags = computed(() => {
-  const q = route.query.tag
-  if (!q) return []
-  return Array.isArray(q) ? q : [q]
+const categories = computed(() =>
+  Array.from(new Set(posts.map(p => p.category))).sort()
+)
+
+const tags = computed(() =>
+  Array.from(new Set(posts.flatMap(p => p.tags))).sort()
+)
+
+const selectedCategory = computed(() => {
+  const c = query.value.category
+  return typeof c === 'string' ? c : undefined
 })
 
+const selectedTags = computed<string[]>(() => {
+  const t = query.value.tag
+  const raw =
+    Array.isArray(t) ? t :
+    typeof t === 'string' ? [t] :
+    []
+  return raw.filter((x): x is string => typeof x === 'string' && x.length > 0)
+})
+
+const searchValue = computed(() => {
+  const q = query.value.q
+  return typeof q === 'string' ? q : ''
+})
+
+function pushQuery(next: Record<string, any>) {
+  router.push({ query: next })
+}
+
+function setSearch(value: string) {
+  const next = { ...query.value }
+  const v = value.trim()
+
+  if (v) next.q = v
+  else delete next.q
+
+  pushQuery(next)
+}
+
 function toggleTag(tag: string) {
-  const next = selectedTags.value.includes(tag)
+  const nextTags = selectedTags.value.includes(tag)
     ? selectedTags.value.filter(t => t !== tag)
     : [...selectedTags.value, tag]
 
-  router.push({
-    query: next.length ? { tag: next } : {}
-  })
+  const next = { ...query.value }
+
+  if (nextTags.length) next.tag = nextTags
+  else delete next.tag
+
+  pushQuery(next)
 }
 
-function selectCategory(cat: string) {
-  router.push({ query: { category: cat } })
+function toggleCategory(cat: string) {
+  const next = { ...query.value }
+
+  // clicking the active category clears it
+  if (selectedCategory.value === cat) delete next.category
+  else next.category = cat
+
+  pushQuery(next)
+}
+
+function clearFilters() {
+  // optionally keep search; or clear everything:
+  pushQuery({})
 }
 </script>
 
@@ -43,13 +92,25 @@ function selectCategory(cat: string) {
 
     <div class="filter-section">
     <details open>
+  <summary>Search</summary>
+
+  <input
+    class="search"
+    type="text"
+    placeholder="Search posts..."
+    :value="searchValue"
+    @input="setSearch(($event.target as HTMLInputElement).value)"
+  />
+</details>
+    <details open>
         <summary>Categories</summary>
 
         <button
         v-for="cat in categories"
         :key="cat"
         class="filter-btn"
-        @click="selectCategory(cat)"
+        :class="{ active: selectedCategory === cat }"
+        @click="toggleCategory(cat)"
         >
         {{ cat }}
         </button>
@@ -167,5 +228,17 @@ function selectCategory(cat: string) {
 .tag-filter.active {
   background: rgba(0,0,0,0.1);
   font-weight: 600;
+}
+
+.search {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+.search:focus {
+  outline: 3px solid rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.45);
 }
 </style>
