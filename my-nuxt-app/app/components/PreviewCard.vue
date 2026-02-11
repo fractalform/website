@@ -34,33 +34,12 @@ const props = defineProps<{
 <style scoped>
 .preview {
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
   gap: 1rem;
+  grid-template-columns: 84px minmax(0, 1fr);
 }
 
-.preview {
-  text-decoration: none;
-}
-
-/* When there is no image, don't reserve the 84px column */
 .preview.no-thumb {
   grid-template-columns: 1fr;
-}
-
-.card-content {
-  min-width: 0;
-  width: 100%;
-}
-
-.preview:hover {
-  transform: translateY(-2px);
-  border-color: #d6d6d6;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-}
-
-.preview:focus-visible {
-  outline: 3px solid rgba(99, 102, 241, 0.35);
-  outline-offset: 2px;
 }
 
 .thumb {
@@ -79,10 +58,8 @@ const props = defineProps<{
   display: block;
 }
 
-.title,
-.subtitle,
-.excerpt {
-  width: 100%;
+.card-content {
+  min-width: 0;
 }
 
 .title {
@@ -91,21 +68,22 @@ const props = defineProps<{
 }
 
 .subtitle {
-  margin: 0.15rem 0 0 0;
-  opacity: 0.75;
+  margin: 0.2rem 0 0 0;
+  opacity: 0.7;
   font-size: 0.9rem;
 }
 
-/* excerpt should not be constrained like prose */
 .excerpt {
-  margin: 0.6rem 0 0.7rem 0;
+  margin: 0.6rem 0 0 0;
   opacity: 0.9;
   max-width: none;
 }
 
 .tags {
+  margin-top: 0.75rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
 }
+
 </style>

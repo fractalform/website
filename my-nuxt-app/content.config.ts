@@ -12,6 +12,7 @@ export default defineContentConfig({
       schema: z.object({
         title: z.string(),
         description: z.string().optional(),
+        summary: z.string().optional(),
         excerpt: z.string().optional(),
         tags: z.array(z.string()).default([]),
         category: z.string().optional(),
@@ -31,6 +32,7 @@ export default defineContentConfig({
       schema: z.object({
         title: z.string(),
         description: z.string().optional(),
+        summary: z.string().optional(),
         excerpt: z.string().optional(),
         tags: z.array(z.string()).default([]),
         category: z.string().optional(),

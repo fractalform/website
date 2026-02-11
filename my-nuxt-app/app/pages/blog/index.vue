@@ -14,9 +14,12 @@ const { data: posts } = await useAsyncData('blog-posts', () =>
 )
 
 type Entry = {
-  _path: string
+  _path?: string
+  path?: string
+  to?: string
   title?: string
   description?: string
+  summary?: string
   excerpt?: string
   tags?: string[]
   category?: string
@@ -24,7 +27,18 @@ type Entry = {
   image?: string
 }
 
-const allPosts = computed<Entry[]>(() => (posts.value ?? []) as Entry[])
+const allPosts = computed(() =>
+  (posts.value ?? [])
+    .map((p: any) => ({
+      ...p,
+      to: p?._path ?? p?.path,
+      excerpt: normalizeExcerpt(p),
+      summary: p.summary,
+      description: p.description,
+      tags: normalizeTags(p)
+    }))
+    .filter((p: any) => typeof p.to === 'string' && p.to.length > 0)
+)
 
 // URL state
 const selectedCategory = computed(() => {
@@ -64,13 +78,17 @@ const filteredPosts = computed(() => {
   if (q) {
     result = result.filter(p => {
       const haystack =
-        `${p.title ?? ''} ${p.excerpt ?? ''} ${p.description ?? ''} ${(p.tags ?? []).join(' ')} ${p.category ?? ''}`.toLowerCase()
-      return haystack.includes(q)
+  `${p.title ?? ''} ${p.summary ?? ''} ${p.description ?? ''} ${(p.tags ?? []).join(' ')} ${p.category ?? ''}`.toLowerCase()
+    return haystack.includes(q)
     })
   }
 
   // Optional: sort newest first if dates exist
-  result = [...result].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
+  result = [...result].sort(
+  (a, b) =>
+    (b.date ?? '').localeCompare(a.date ?? '') ||
+    (a.title ?? '').localeCompare(b.title ?? '')
+)
 
   return result
 })
@@ -94,13 +112,30 @@ function clearSearch() {
   delete next.q
   router.push({ query: next })
 }
+function getExcerpt(p: any) {
+  const ex = p.excerpt ?? p.description ?? ''
+  return typeof ex === 'string' ? ex : ''
+}
+function normalizeExcerpt(x: any): string {
+  const v = x?.excerpt ?? x?.description ?? ''
+  return typeof v === 'string' ? v : ''
+}
+
+function normalizeTags(x: any): string[] {
+  const t = x?.tags
+  if (!t) return []
+  const arr = Array.isArray(t) ? t : [t]
+  return arr.filter((s): s is string => typeof s === 'string' && s.length > 0)
+}
 </script>
 
 <template>
   <section>
     <div class="container">
+     <div class="page-head">
       <h1>Blog</h1>
-      <p>Posts and updates.</p>
+      <p class="page-subtitle">Posts and updates.</p>
+    </div>
 
       <div class="results-bar">
         <div class="summary">
@@ -137,16 +172,16 @@ function clearSearch() {
         </div>
       </div>
 
-      <div class="grid">
+      <div class="grid-cards">
         <PreviewCard
           v-for="p in filteredPosts"
-          :to="p._path || p.path"
-          :key="p._path || p.path"
+          :key="p.to"
+          :to="p.to"
           :title="p.title || '(Untitled)'"
           subtitle="Blog"
-          :excerpt="p.excerpt || p.description || ''"
+          :excerpt="(p.summary || p.description || '')"
           :image="p.image"
-          :tags="p.tags || []"
+          :tags="p.tags"
         />
       </div>
 

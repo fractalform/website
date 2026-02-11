@@ -32,30 +32,59 @@ const { data: blog } = await useAsyncData('lib-blog', () => queryCollection('blo
 const { data: pages } = await useAsyncData('lib-pages', () => queryCollection('pages').all())
 
 type Entry = {
-  _path?: string
-  path?: string
-  to?: string
+  to: string
+  kind: 'Blog' | 'Page'
   title?: string
   description?: string
-  excerpt?: string
-  tags?: string[]
-  category?: string
-  date?: string
+  summary?: string
+  excerpt?: any
+  tags?: any
+  category?: any
+  date?: any
   image?: string
-  kind: 'Blog' | 'Page'
+}
+
+function normalizeExcerpt(x: any): string {
+  const v = x?.excerpt ?? x?.description ?? ''
+  return typeof v === 'string' ? v : ''
+}
+
+function normalizeTags(x: any): string[] {
+  const t = x?.tags
+  if (!t) return []
+  const arr = Array.isArray(t) ? t : [t]
+  return arr.filter((s): s is string => typeof s === 'string' && s.length > 0)
+}
+
+function normalizeCategory(x: any): string | undefined {
+  const c = x?.category
+  return typeof c === 'string' && c.length > 0 ? c : undefined
 }
 
 const items = computed<Entry[]>(() => {
   const b = (blog.value ?? []).map((x: any) => ({
-    ...x,
+    to: x?._path ?? x?.path,
     kind: 'Blog' as const,
-    to: x._path ?? x.path
+    title: x?.title,
+    summary: x?.summary,
+    description: x?.description,
+    excerpt: normalizeExcerpt(x),
+    tags: normalizeTags(x),
+    category: normalizeCategory(x),
+    date: typeof x?.date === 'string' ? x.date : '',
+    image: x?.image
   }))
 
   const p = (pages.value ?? []).map((x: any) => ({
-    ...x,
+    to: x?._path ?? x?.path,
     kind: 'Page' as const,
-    to: x._path ?? x.path
+    title: x?.title,
+    description: x?.description,
+    excerpt: normalizeExcerpt(x),
+    tags: normalizeTags(x),
+    category: normalizeCategory(x),
+    date: typeof x?.date === 'string' ? x.date : '',
+    image: x?.image
   }))
 
   return [...b, ...p].filter(i => typeof i.to === 'string' && i.to.length > 0)
@@ -80,7 +109,7 @@ const filteredItems = computed(() => {
   if (q) {
     result = result.filter(i => {
       const haystack =
-        `${i.title ?? ''} ${i.excerpt ?? ''} ${i.description ?? ''} ${(i.tags ?? []).join(' ')} ${i.category ?? ''}`.toLowerCase()
+  `${i?.title ?? ''} ${getExcerpt(i)} ${(i?.tags ?? []).join(' ')} ${i?.category ?? ''}`.toLowerCase()
       return haystack.includes(q)
     })
   }
@@ -92,26 +121,33 @@ const filteredItems = computed(() => {
 })
 
 function clearAll() { router.push({ query: {} }) }
+function getExcerpt(item: any): string {
+  if (!item || typeof item !== 'object') return ''
+  const ex = item.excerpt ?? item.description ?? ''
+  return typeof ex === 'string' ? ex : ''
+}
 </script>
 
 <template>
   <section>
     <div class="container">
-      <h1>Library</h1>
-      <p>Everything on the site — pages and posts.</p>
+      <div class="page-head">
+        <h1>Library</h1>
+        <p class="page-subtitle">Everything on the site, Pages and Posts</p>
+      </div>
       <p class="muted">{{ filteredItems.length }} result<span v-if="filteredItems.length !== 1">s</span></p>
 
-      <div class="grid">
-        <PreviewCard
+      <div class="grid-cards">
+       <PreviewCard
             v-for="i in filteredItems"
             :key="i.to"
             :to="i.to"
             :title="i.title || '(Untitled)'"
             :subtitle="i.kind"
-            :excerpt="i.excerpt || i.description || ''"
+            :excerpt="(i.summary || i.description || '')"
             :image="i.image"
-            :tags="i.tags || []"
-            />
+            :tags="i.tags"
+        />
       </div>
 
       <div v-if="filteredItems.length === 0" class="empty">

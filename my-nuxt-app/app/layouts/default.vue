@@ -37,17 +37,21 @@ import { navItems } from '~/data/nav'
     "sidebar content";
 }
 
+/* Header: app-like, crisp */
 .header-area {
   grid-area: header;
   position: sticky;
   top: 0;
   z-index: 10;
-  background: #222;
-  color: white;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border-bottom: 1px solid var(--border);
 }
 
-/* THIS is the key: header aligns to the same columns as the shell */
+/* Align header to sidebar/content columns */
 .header-inner {
   height: var(--header-h);
   display: grid;
@@ -57,45 +61,56 @@ import { navItems } from '~/data/nav'
 
 /* left cell aligns with sidebar text */
 .brand {
-  padding-left: 1.5rem; /* matches your container side padding */
+  padding-left: var(--gutter);
 }
 
 .brand-link {
-  color: white;
+  color: var(--text);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 /* right cell aligns with content column */
 .top-nav {
   display: flex;
   justify-content: flex-end;
-  padding-right: 1.5rem; /* matches container side padding */
+  align-items: center;
+  padding-right: var(--gutter);
+  gap: 0.35rem;
 }
 
+/* Top nav items: pill hover like modern apps */
 .link {
-  margin-left: 1rem;
-  color: white;
+  color: var(--text);
   text-decoration: none;
-  opacity: 0.9;
+  opacity: 0.86;
+
+  padding: 0.45rem 0.65rem;
+  border-radius: 10px;
+  transition: background 120ms ease, opacity 120ms ease;
 }
 
 .link:hover {
   opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .link.router-link-active {
-  text-decoration: underline;
+  opacity: 1;
+  background: rgba(99, 102, 241, 0.12);
 }
 
+/* Sidebar: matches token system */
 .sidebar-area {
   grid-area: sidebar;
   position: sticky;
   top: var(--header-h);
   height: calc(100vh - var(--header-h));
   overflow: auto;
-  background: #fff;
-  border-right: 1px solid #e7e7e7;
+
+  background: var(--surface);
+  border-right: 1px solid var(--border);
 }
 
 .content-area {
@@ -103,7 +118,7 @@ import { navItems } from '~/data/nav'
   min-width: 0;
 }
 
-/* Mobile: hide sidebar, make header a single column and align to content container */
+/* Mobile: hide sidebar, header aligns to container */
 @media (max-width: 900px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -118,7 +133,7 @@ import { navItems } from '~/data/nav'
 
   .header-inner {
     grid-template-columns: 1fr;
-    padding: 0 1.5rem; /* same as container padding */
+    padding: 0 var(--gutter);
   }
 
   .brand {
@@ -129,12 +144,9 @@ import { navItems } from '~/data/nav'
     justify-content: flex-start;
     padding-right: 0;
     margin-top: 0.35rem;
-    gap: 1rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
   }
-
-  .link {
-    margin-left: 0;
-  }
 }
+
 </style>

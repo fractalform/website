@@ -1,12 +1,10 @@
 ---
 title: First Post
-description: A quick post to prove the pipeline: cards, tags, and navigation.
-excerpt: A quick post to prove the pipeline: cards, tags, and navigation.
-tags:
-  - nuxt
-  - blog
+description: Posts and updates.
+summary: A short preview used on cards (safe string).
+tags: [nuxt]
 category: Blog
-date: 2026-02-06
+date: 2026-02-09
 image: /images/AL-Symbol2a.png
 ---
 

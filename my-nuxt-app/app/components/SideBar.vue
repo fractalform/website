@@ -1,21 +1,72 @@
 <script setup lang="ts">
+// Sidebar navigation (static links)
 import { navItems } from '~/data/nav'
-import { posts } from '~/data/posts'
 
 const route = useRoute()
 const router = useRouter()
 
-// Safe, always-an-object query view
+// ---
+// Read the current URL query safely
+//    route.query is always an object in practice
 const query = computed(() => route.query ?? {})
+const showFilters = computed(() =>
+  route.path.startsWith('/library') || route.path.startsWith('/blog')
+)
+// ---
+// Pull content from Nuxt Content collections
+const { data: blog } = await useAsyncData('sb-blog', () =>
+  queryCollection('blog').all()
+)
+const { data: pages } = await useAsyncData('sb-pages', () =>
+  queryCollection('pages').all()
+)
+
+// ---
+// 3) Helpers to normalize fields coming from content
+//    Nuxt Content data can be missing fields or in unexpected shapes,
+//    so we make sure we always end up with clean primitives.
+// ---
+function normalizeTags(x: any): string[] {
+  const t = x?.tags
+  if (!t) return []
+  const arr = Array.isArray(t) ? t : [t]
+  return arr.filter((s): s is string => typeof s === 'string' && s.length > 0)
+}
+
+function normalizeCategory(x: any): string | undefined {
+  const c = x?.category
+  return typeof c === 'string' && c.length > 0 ? c : undefined
+}
+
+// ---
+// 4) Combine all entries for global filtering lists (tags/categories)
+//    This makes the sidebar reflect *all* content (blog + pages).
+// ---
+const allEntries = computed<any[]>(() => [
+  ...(blog.value ?? []),
+  ...(pages.value ?? [])
+])
 
 const categories = computed(() =>
-  Array.from(new Set(posts.map(p => p.category))).sort()
+  Array.from(
+    new Set(
+      allEntries.value
+        .map(normalizeCategory)
+        .filter(Boolean) as string[]
+    )
+  ).sort()
 )
 
 const tags = computed(() =>
-  Array.from(new Set(posts.flatMap(p => p.tags))).sort()
+  Array.from(
+    new Set(allEntries.value.flatMap(normalizeTags))
+  ).sort()
 )
 
+// ---
+// 5) Read current selected filters from the URL
+//    These drive "active" button states and help toggle behavior.
+// ---
 const selectedCategory = computed(() => {
   const c = query.value.category
   return typeof c === 'string' ? c : undefined
@@ -35,10 +86,23 @@ const searchValue = computed(() => {
   return typeof q === 'string' ? q : ''
 })
 
+// ---
+// 6) Push query updates
+//    By default we stay on the current page and only update query params.
+//    If you want the sidebar to ALWAYS send users to /library (global browse),
+//    switch to the commented router.push line below.
+// ---
 function pushQuery(next: Record<string, any>) {
   router.push({ query: next })
+
+  // OPTIONAL: Always navigate to /library when using filters/search
+  // router.push({ path: '/library', query: next })
 }
 
+// ---
+// 7) Actions: Search, Tag toggle, Category toggle, Clear
+//    NOTE: These MERGE query params so you can combine filters.
+// ---
 function setSearch(value: string) {
   const next = { ...query.value }
   const v = value.trim()
@@ -50,12 +114,13 @@ function setSearch(value: string) {
 }
 
 function toggleTag(tag: string) {
-  const nextTags = selectedTags.value.includes(tag)
-    ? selectedTags.value.filter(t => t !== tag)
-    : [...selectedTags.value, tag]
+  const current = selectedTags.value
+
+  const nextTags = current.includes(tag)
+    ? current.filter(t => t !== tag)
+    : [...current, tag]
 
   const next = { ...query.value }
-
   if (nextTags.length) next.tag = nextTags
   else delete next.tag
 
@@ -65,7 +130,7 @@ function toggleTag(tag: string) {
 function toggleCategory(cat: string) {
   const next = { ...query.value }
 
-  // clicking the active category clears it
+  // Clicking the active category clears it
   if (selectedCategory.value === cat) delete next.category
   else next.category = cat
 
@@ -73,7 +138,7 @@ function toggleCategory(cat: string) {
 }
 
 function clearFilters() {
-  // optionally keep search; or clear everything:
+  // Clears everything: category, tags, search, etc.
   pushQuery({})
 }
 </script>
@@ -83,53 +148,61 @@ function clearFilters() {
     <div class="sidebar-inner">
       <div class="group">
         <div class="group-title">Navigation</div>
-            <nav class="nav">
-            <NuxtLink v-for="i in navItems" :key="i.to" :to="i.to" class="link">
-                {{ i.label }}
-            </NuxtLink>
-            </nav>
+        <nav class="nav">
+          <NuxtLink
+            v-for="i in navItems"
+            :key="i.to"
+            :to="i.to"
+            class="link"
+          >
+            {{ i.label }}
+          </NuxtLink>
+        </nav>
       </div>
 
-    <div class="filter-section">
-    <details open>
-  <summary>Search</summary>
+      <div v-if="showFilters" class="filter-section">
+        <details open>
+          <summary>Search</summary>
 
-  <input
-    class="search"
-    type="text"
-    placeholder="Search posts..."
-    :value="searchValue"
-    @input="setSearch(($event.target as HTMLInputElement).value)"
-  />
-</details>
-    <details open>
-        <summary>Categories</summary>
+          <input
+            class="search"
+            type="text"
+            placeholder="Search content..."
+            :value="searchValue"
+            @input="setSearch(($event.target as HTMLInputElement).value)"
+          />
+        </details>
 
-        <button
-        v-for="cat in categories"
-        :key="cat"
-        class="filter-btn"
-        :class="{ active: selectedCategory === cat }"
-        @click="toggleCategory(cat)"
-        >
-        {{ cat }}
-        </button>
-    </details>
+        <details open>
+          <summary>Categories</summary>
 
-    <details open>
-        <summary>Tags</summary>
+          <button
+            v-for="cat in categories"
+            :key="cat"
+            class="filter-btn"
+            :class="{ active: selectedCategory === cat }"
+            @click="toggleCategory(cat)"
+          >
+            {{ cat }}
+          </button>
+        </details>
 
-        <button
-        v-for="tag in tags"
-        :key="tag"
-        class="filter-btn"
-        :class="{ active: selectedTags.includes(tag) }"
-        @click="toggleTag(tag)"
-        >
-        {{ tag }}
-        </button>
-    </details>
-    </div>
+        <details open>
+          <summary>Tags</summary>
+
+          <button
+            v-for="tag in tags"
+            :key="tag"
+            class="filter-btn"
+            :class="{ active: selectedTags.includes(tag) }"
+            @click="toggleTag(tag)"
+          >
+            {{ tag }}
+          </button>
+        </details>
+
+        <button class="clear" @click="clearFilters">Clear filters</button>
+      </div>
     </div>
   </aside>
 </template>
@@ -144,72 +217,81 @@ function clearFilters() {
 }
 
 .group-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  opacity: 0.75;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0.6;
   margin-bottom: 0.75rem;
 }
 
 .nav {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
 .link {
-  padding: 0.55rem 0.65rem;
-  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  border-radius: 10px;
   text-decoration: none;
   color: inherit;
+  transition: background 120ms ease;
 }
 
 .link:hover {
-  background: #f3f4f6;
+  background: rgba(0,0,0,0.05);
 }
 
 .link.router-link-active {
-  background: #eef2ff;
+  background: rgba(99,102,241,0.12);
+  font-weight: 600;
 }
 
-.pill-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.pill {
-  border: 1px solid #e7e7e7;
-  background: #fafafa;
-  padding: 0.4rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.pill:hover {
-  background: #f3f4f6;
-}
-
+/* Filters */
 .filter-section details {
   margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 0.6rem 0.6rem;
 }
 
 .filter-section summary {
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.6;
-  margin-bottom: 0.4rem;
+  opacity: 0.65;
+  font-weight: 700;
+  padding: 0.25rem 0.25rem 0.5rem 0.25rem;
+}
+
+.search {
+  width: 100%;
+  padding: 0.6rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.search:focus {
+  outline: 3px solid rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.45);
 }
 
 .filter-btn {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+
   width: 100%;
-  padding: 0.4rem 0.6rem;
-  text-align: left;
-  border-radius: 8px;
-  border: none;
+  padding: 0.5rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
+
+  transition: background 120ms ease, border-color 120ms ease;
 }
 
 .filter-btn:hover {
@@ -217,28 +299,24 @@ function clearFilters() {
 }
 
 .filter-btn.active {
-  background: rgba(0,0,0,0.1);
-  font-weight: 600;
+  background: rgba(99,102,241,0.12);
+  border-color: rgba(99,102,241,0.28);
+  font-weight: 700;
 }
 
-.tag-filter:hover {
-  background: rgba(0,0,0,0.05);
-}
-
-.tag-filter.active {
-  background: rgba(0,0,0,0.1);
-  font-weight: 600;
-}
-
-.search {
+.clear {
+  margin-top: 0.75rem;
   width: 100%;
-  padding: 0.5rem 0.6rem;
-  border-radius: 10px;
+  padding: 0.6rem 0.65rem;
+  border-radius: 12px;
   border: 1px solid var(--border);
   background: #fff;
+  cursor: pointer;
+  transition: background 120ms ease;
 }
-.search:focus {
-  outline: 3px solid rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.45);
+
+.clear:hover {
+  background: #f6f6f6;
 }
+
 </style>
