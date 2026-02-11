@@ -1,13 +1,36 @@
 <script setup lang="ts">
 const route = useRoute()
 
-const { data: page, pending } = useAsyncData(
-  () => `page:${route.path}`,
-  () => queryCollection('pages').path(route.path).first(),
-  { watch: [() => route.path] } // re-run when route changes
+/**
+ * Build the collection path explicitly.
+ * For catch-all routes:
+ * - /about -> params.slug = ["about"]
+ * - /docs/getting-started -> ["docs", "getting-started"]
+ * - / -> undefined (but this file usually won’t match /)
+ */
+const contentPath = computed(() => {
+  const parts = route.params.slug
+  if (!parts) return '/'
+  const segs = Array.isArray(parts) ? parts : [parts]
+  return `/${segs.join('/')}`
+})
+
+const { data: page, pending } = await useAsyncData(
+  () => `page:${contentPath.value}`,
+  async () => {
+    const doc = await queryCollection('pages').path(contentPath.value).first()
+    if (!doc) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Page not found'
+      })
+    }
+    return doc
+  },
+  { watch: [() => route.params.slug] }
 )
 
-// Head should be safe even while loading
+// Head is safe; when page is loaded it updates.
 useHead(() => ({
   title: page.value?.title || 'Page',
   meta: [
@@ -21,27 +44,18 @@ useHead(() => ({
     }
   ]
 }))
-
-// Only throw a 404 after loading finishes
-watchEffect(() => {
-  if (!pending.value && !page.value) {
-    throw createError({ statusCode: 404, statusMessage: 'Page not found' })
-  }
-})
 </script>
 
 <template>
   <section>
     <div class="container">
-      <!-- Loading state -->
       <div v-if="pending" class="prose">
         <p class="muted">Loading…</p>
       </div>
 
-      <!-- Render only when content exists -->
-      <div v-else-if="page" class="prose">
-        <h1>{{ page.title }}</h1>
-        <ContentRenderer :value="page" />
+      <div v-else class="prose">
+        <h1>{{ page!.title }}</h1>
+        <ContentRenderer :value="page!" />
       </div>
     </div>
   </section>

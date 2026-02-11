@@ -1,31 +1,41 @@
 <script setup lang="ts">
 const route = useRoute()
 
-const { data: post, pending } = useAsyncData(
-  () => `blog:${route.path}`,
-  () => queryCollection('blog').path(route.path).first(),
-  { watch: [() => route.path] }
+// Build the content path explicitly (more reliable than route.path during edge cases)
+const contentPath = computed(() => `/blog/${route.params.slug}`)
+
+const { data: post, pending } = await useAsyncData(
+  () => `blog:${String(route.params.slug)}`,
+  async () => {
+    const doc = await queryCollection('blog').path(contentPath.value).first()
+    if (!doc) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Post not found'
+      })
+    }
+    return doc
+  },
+  { watch: [() => route.params.slug] }
 )
+
+const formattedDate = computed(() => {
+  const d = post.value?.date
+  if (!d || typeof d !== 'string') return ''
+  const dt = new Date(d)
+  if (Number.isNaN(dt.getTime())) return d
+  return new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(dt)
+})
 
 useHead(() => ({
   title: post.value?.title || 'Post',
   meta: [
     {
       name: 'description',
-      content:
-        post.value?.description ||
-        post.value?.summary ||
-        post.value?.excerpt ||
-        ''
+      content: post.value?.description || post.value?.summary || post.value?.excerpt || ''
     }
   ]
 }))
-
-watchEffect(() => {
-  if (!pending.value && !post.value) {
-    throw createError({ statusCode: 404, statusMessage: 'Post not found' })
-  }
-})
 </script>
 
 <template>
@@ -35,10 +45,10 @@ watchEffect(() => {
         <p class="muted">Loading…</p>
       </div>
 
-      <div v-else-if="post" class="prose">
-        <h1>{{ post.title }}</h1>
-        <p v-if="post.date" class="muted"><em>{{ post.date }}</em></p>
-        <ContentRenderer :value="post" />
+      <div v-else class="prose">
+        <h1>{{ post!.title }}</h1>
+        <p v-if="formattedDate" class="meta">{{ formattedDate }}</p>
+        <ContentRenderer :value="post!" />
       </div>
     </div>
   </section>

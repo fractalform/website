@@ -8,4 +8,6 @@ category: Notes
 
 This is a **Markdown page**, not a Vue page.
 
-It renders under a shared layout, so the title comes from frontmatter.
+It renders under a shared layout, so the title comes from frontmatter. :joy:
+
+> What say you, Laszlo?

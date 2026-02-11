@@ -45,7 +45,7 @@ type Entry = {
 }
 
 function normalizeExcerpt(x: any): string {
-  const v = x?.excerpt ?? x?.description ?? ''
+  const v = x?.summary ?? x?.excerpt ?? x?.description ?? ''
   return typeof v === 'string' ? v : ''
 }
 
@@ -79,6 +79,7 @@ const items = computed<Entry[]>(() => {
     to: x?._path ?? x?.path,
     kind: 'Page' as const,
     title: x?.title,
+    summary: x?.summary,
     description: x?.description,
     excerpt: normalizeExcerpt(x),
     tags: normalizeTags(x),
@@ -144,7 +145,7 @@ function getExcerpt(item: any): string {
             :to="i.to"
             :title="i.title || '(Untitled)'"
             :subtitle="i.kind"
-            :excerpt="(i.summary || i.description || '')"
+            :excerpt="i.excerpt"
             :image="i.image"
             :tags="i.tags"
         />
@@ -160,7 +161,6 @@ function getExcerpt(item: any): string {
 </template>
 
 <style scoped>
-.grid { margin-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
 .empty { margin-top: 2rem; opacity: 0.9; }
 .chip { border: 1px solid var(--border); background: #f6f6f6; border-radius: 999px; padding: 0.35rem 0.6rem; cursor: pointer; font-size: 0.85rem; }
 .chip.clear { background: #fff; }

@@ -112,12 +112,8 @@ function clearSearch() {
   delete next.q
   router.push({ query: next })
 }
-function getExcerpt(p: any) {
-  const ex = p.excerpt ?? p.description ?? ''
-  return typeof ex === 'string' ? ex : ''
-}
 function normalizeExcerpt(x: any): string {
-  const v = x?.excerpt ?? x?.description ?? ''
+  const v = x?.summary ?? x?.excerpt ?? x?.description ?? ''
   return typeof v === 'string' ? v : ''
 }
 
@@ -179,7 +175,7 @@ function normalizeTags(x: any): string[] {
           :to="p.to"
           :title="p.title || '(Untitled)'"
           subtitle="Blog"
-          :excerpt="(p.summary || p.description || '')"
+          :excerpt="(p.excerpt || p.description || '')"
           :image="p.image"
           :tags="p.tags"
         />
@@ -194,7 +190,6 @@ function normalizeTags(x: any): string[] {
 </template>
 
 <style scoped>
-.grid { margin-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
 .results-bar { margin-top: 1rem; padding: 0.75rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .summary { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
 .muted { opacity: 0.75; }

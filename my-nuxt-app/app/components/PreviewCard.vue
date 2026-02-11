@@ -38,6 +38,15 @@ const props = defineProps<{
   grid-template-columns: 84px minmax(0, 1fr);
 }
 
+/* If AppCard renders an <a>, hover still feels good via this wrapper */
+.preview :deep(*) {
+  transition: transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+}
+
+.preview:hover {
+  transform: translateY(-2px);
+}
+
 .preview.no-thumb {
   grid-template-columns: 1fr;
 }
@@ -48,7 +57,8 @@ const props = defineProps<{
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--border);
-  background: #f2f2f2;
+  background: linear-gradient(180deg, #f2f2f2, #eaeaea);
+  box-shadow: var(--shadow-sm);
 }
 
 .thumb img {
@@ -74,9 +84,13 @@ const props = defineProps<{
 }
 
 .excerpt {
-  margin: 0.6rem 0 0 0;
-  opacity: 0.9;
-  max-width: none;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+
+  -webkit-line-clamp: 3;
+  line-clamp: 3; /* standard property */
+
+  overflow: hidden;
 }
 
 .tags {

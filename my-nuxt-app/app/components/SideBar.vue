@@ -165,7 +165,7 @@ function clearFilters() {
           <summary>Search</summary>
 
           <input
-            class="search"
+            class="search ui-input"
             type="text"
             placeholder="Search content..."
             :value="searchValue"
@@ -254,54 +254,48 @@ function clearFilters() {
   border-radius: 12px;
   background: var(--surface);
   padding: 0.6rem 0.6rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--dur-2) var(--ease-out);
+}
+
+.filter-section details:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .filter-section summary {
   cursor: pointer;
+  user-select: none;
   font-size: 0.78rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.65;
-  font-weight: 700;
+  opacity: 0.7;
+  font-weight: 750;
   padding: 0.25rem 0.25rem 0.5rem 0.25rem;
 }
 
-.search {
-  width: 100%;
-  padding: 0.6rem 0.65rem;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: #fff;
-}
-
-.search:focus {
-  outline: 3px solid rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.45);
-}
-
 .filter-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-
   width: 100%;
   padding: 0.5rem 0.65rem;
   border-radius: 10px;
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
-
-  transition: background 120ms ease, border-color 120ms ease;
+  text-align: left;
+  transition:
+    background var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out),
+    transform var(--dur-1) var(--ease-out);
 }
 
 .filter-btn:hover {
   background: rgba(0,0,0,0.05);
+  transform: translateY(-1px);
 }
 
 .filter-btn.active {
   background: rgba(99,102,241,0.12);
   border-color: rgba(99,102,241,0.28);
-  font-weight: 700;
+  font-weight: 750;
 }
 
 .clear {
@@ -312,11 +306,16 @@ function clearFilters() {
   border: 1px solid var(--border);
   background: #fff;
   cursor: pointer;
-  transition: background 120ms ease;
+  transition: transform var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out);
 }
 
 .clear:hover {
   background: #f6f6f6;
+  transform: translateY(-1px);
 }
 
+/* Add section spacing between Navigation block and the Filters block */
+.group + .filter-section {
+  margin-top: 0.35rem; /* matches .nav gap */
+}
 </style>
