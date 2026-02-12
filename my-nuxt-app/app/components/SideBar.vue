@@ -1,7 +1,6 @@
 <script setup lang="ts">
 // Sidebar navigation (static links)
-import { navItems } from '~/data/nav'
-
+const { nav } = useSiteNav()
 const route = useRoute()
 const router = useRouter()
 
@@ -148,15 +147,26 @@ function clearFilters() {
     <div class="sidebar-inner">
       <div class="group">
         <div class="group-title">Navigation</div>
-        <nav class="nav">
-          <NuxtLink
-            v-for="i in navItems"
-            :key="i.to"
-            :to="i.to"
-            class="link"
-          >
-            {{ i.label }}
+<nav class="nav">
+  <template v-for="item in nav" :key="item.to">
+    <details v-if="item.children?.length" class="nav-group">
+      <summary class="nav-link">{{ item.label }}</summary>
+      <div class="nav-children">
+        <NuxtLink
+          v-for="child in item.children"
+          :key="child.to"
+          :to="child.to"
+          class="nav-link nav-child"
+        >
+          {{ child.label }}
+        </NuxtLink>
+      </div>
+    </details>
+
+    <NuxtLink v-else :to="item.to" class="nav-link">
+            {{ item.label }}
           </NuxtLink>
+          </template>
         </nav>
       </div>
 
@@ -230,7 +240,7 @@ function clearFilters() {
   gap: 0.35rem;
 }
 
-.link {
+.nav-link {
   padding: 0.6rem 0.7rem;
   border-radius: 10px;
   text-decoration: none;
@@ -238,11 +248,11 @@ function clearFilters() {
   transition: background 120ms ease;
 }
 
-.link:hover {
+.nav-link:hover {
   background: rgba(0,0,0,0.05);
 }
 
-.link.router-link-active {
+.nav-link.router-link-active {
   background: rgba(99,102,241,0.12);
   font-weight: 600;
 }
@@ -317,5 +327,23 @@ function clearFilters() {
 /* Add section spacing between Navigation block and the Filters block */
 .group + .filter-section {
   margin-top: 0.35rem; /* matches .nav gap */
+}
+
+.nav-group summary {
+  list-style: none;
+}
+.nav-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-children {
+  margin-top: 0.35rem;
+  padding-left: 0.5rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.nav-child {
+  opacity: 0.9;
 }
 </style>

@@ -17,7 +17,12 @@ export default defineContentConfig({
         tags: z.array(z.string()).default([]),
         category: z.string().optional(),
         date: z.string().optional(),
-        image: z.string().optional()
+        image: z.string().optional(),
+          // nav metadata
+        nav: z.boolean().optional(),
+        navTitle: z.string().optional(),
+        navOrder: z.number().optional(),
+        navParent: z.string().optional()
       })
     }),
 
@@ -37,7 +42,11 @@ export default defineContentConfig({
         tags: z.array(z.string()).default([]),
         category: z.string().optional(),
         date: z.string().optional(),
-        image: z.string().optional()
+        image: z.string().optional(),
+        nav: z.boolean().optional(),
+        navTitle: z.string().optional(),
+        navOrder: z.number().optional(),
+        navParent: z.string().optional()
       })
     })
   }
