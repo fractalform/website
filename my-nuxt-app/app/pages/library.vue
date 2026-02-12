@@ -31,6 +31,19 @@ const searchQuery = computed(() => {
 const { data: blog } = await useAsyncData('lib-blog', () => queryCollection('blog').all())
 const { data: pages } = await useAsyncData('lib-pages', () => queryCollection('pages').all())
 
+// Full-text search sections (markdown body + headings)
+const { data: blogSections } = await useAsyncData('lib-blog-sections', () =>
+  queryCollectionSearchSections('blog', {
+    ignoredTags: ['code', 'pre'],
+  })
+)
+
+const { data: pageSections } = await useAsyncData('lib-page-sections', () =>
+  queryCollectionSearchSections('pages', {
+    ignoredTags: ['code', 'pre'],
+  })
+)
+
 type Entry = {
   to: string
   kind: 'Blog' | 'Page'
@@ -93,6 +106,25 @@ const items = computed<Entry[]>(() => {
 
 const allItems = computed(() => items.value)
 
+// Paths that match the keyword within markdown body/headings
+const matchedLibraryPaths = computed<Set<string> | null>(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return null
+
+  const set = new Set<string>()
+  const sections = [...(blogSections.value ?? []), ...(pageSections.value ?? [])]
+
+  for (const s of sections) {
+    const content = `${(s as any)?.title ?? ''} ${(s as any)?.content ?? ''}`.toLowerCase()
+    if (content.includes(q)) {
+      const p = (s as any)?.path
+      if (typeof p === 'string' && p.length) set.add(p)
+    }
+  }
+
+  return set
+})
+
 const filteredItems = computed(() => {
   let result = allItems.value
 
@@ -108,15 +140,23 @@ const filteredItems = computed(() => {
 
   const q = searchQuery.value.trim().toLowerCase()
   if (q) {
+    const bodyMatches = matchedLibraryPaths.value
+
     result = result.filter(i => {
       const haystack =
-  `${i?.title ?? ''} ${getExcerpt(i)} ${(i?.tags ?? []).join(' ')} ${i?.category ?? ''}`.toLowerCase()
-      return haystack.includes(q)
+        `${i?.title ?? ''} ${getExcerpt(i)} ${(i?.tags ?? []).join(' ')} ${i?.category ?? ''}`.toLowerCase()
+
+      const inBody = bodyMatches ? bodyMatches.has(i.to) : false
+      return haystack.includes(q) || inBody
     })
   }
 
   // nice default sort: newest first if date exists, otherwise title
-  result = [...result].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '') || (a.title ?? '').localeCompare(b.title ?? ''))
+  result = [...result].sort(
+    (a, b) =>
+      (b.date ?? '').localeCompare(a.date ?? '') ||
+      (a.title ?? '').localeCompare(b.title ?? '')
+  )
 
   return result
 })
@@ -136,18 +176,21 @@ function getExcerpt(item: any): string {
         <h1>Library</h1>
         <p class="page-subtitle">Everything on the site, Pages and Posts</p>
       </div>
-      <p class="muted">{{ filteredItems.length }} result<span v-if="filteredItems.length !== 1">s</span></p>
+
+      <p class="muted">
+        {{ filteredItems.length }} result<span v-if="filteredItems.length !== 1">s</span>
+      </p>
 
       <div class="grid-cards">
-       <PreviewCard
-            v-for="i in filteredItems"
-            :key="i.to"
-            :to="i.to"
-            :title="i.title || '(Untitled)'"
-            :subtitle="i.kind"
-            :excerpt="i.excerpt"
-            :image="i.image"
-            :tags="i.tags"
+        <PreviewCard
+          v-for="i in filteredItems"
+          :key="i.to"
+          :to="i.to"
+          :title="i.title || '(Untitled)'"
+          :subtitle="i.kind"
+          :excerpt="i.excerpt"
+          :image="i.image"
+          :tags="i.tags"
         />
       </div>
 

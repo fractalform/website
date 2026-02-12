@@ -13,6 +13,13 @@ const { data: posts } = await useAsyncData('blog-posts', () =>
   queryCollection('blog').all()
 )
 
+// Full-text search sections (markdown body + headings)
+const { data: blogSections } = await useAsyncData('blog-sections', () =>
+  queryCollectionSearchSections('blog', {
+    ignoredTags: ['code', 'pre'],
+  })
+)
+
 type Entry = {
   _path?: string
   path?: string
@@ -60,6 +67,22 @@ const searchQuery = computed(() => {
   return typeof q === 'string' ? q : ''
 })
 
+// Paths that match the keyword within markdown body/headings
+const matchedBlogPaths = computed<Set<string> | null>(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return null
+
+  const set = new Set<string>()
+  for (const s of blogSections.value ?? []) {
+    const content = `${(s as any)?.title ?? ''} ${(s as any)?.content ?? ''}`.toLowerCase()
+    if (content.includes(q)) {
+      const p = (s as any)?.path
+      if (typeof p === 'string' && p.length) set.add(p)
+    }
+  }
+  return set
+})
+
 // Filter logic
 const filteredPosts = computed(() => {
   let result = allPosts.value
@@ -76,19 +99,26 @@ const filteredPosts = computed(() => {
 
   const q = searchQuery.value.trim().toLowerCase()
   if (q) {
+    const bodyMatches = matchedBlogPaths.value
+
     result = result.filter(p => {
+      // Frontmatter/metadata match (your current behavior)
       const haystack =
-  `${p.title ?? ''} ${p.summary ?? ''} ${p.description ?? ''} ${(p.tags ?? []).join(' ')} ${p.category ?? ''}`.toLowerCase()
-    return haystack.includes(q)
+        `${p.title ?? ''} ${p.summary ?? ''} ${p.description ?? ''} ${(p.tags ?? []).join(' ')} ${p.category ?? ''}`.toLowerCase()
+
+      // Markdown body/headings match
+      const inBody = bodyMatches ? bodyMatches.has(p.to as string) : false
+
+      return haystack.includes(q) || inBody
     })
   }
 
   // Optional: sort newest first if dates exist
   result = [...result].sort(
-  (a, b) =>
-    (b.date ?? '').localeCompare(a.date ?? '') ||
-    (a.title ?? '').localeCompare(b.title ?? '')
-)
+    (a, b) =>
+      (b.date ?? '').localeCompare(a.date ?? '') ||
+      (a.title ?? '').localeCompare(b.title ?? '')
+  )
 
   return result
 })
@@ -112,6 +142,7 @@ function clearSearch() {
   delete next.q
   router.push({ query: next })
 }
+
 function normalizeExcerpt(x: any): string {
   const v = x?.summary ?? x?.excerpt ?? x?.description ?? ''
   return typeof v === 'string' ? v : ''
@@ -128,10 +159,10 @@ function normalizeTags(x: any): string[] {
 <template>
   <section>
     <div class="container">
-     <div class="page-head">
-      <h1>Blog</h1>
-      <p class="page-subtitle">Posts and updates.</p>
-    </div>
+      <div class="page-head">
+        <h1>Blog</h1>
+        <p class="page-subtitle">Posts and updates.</p>
+      </div>
 
       <div class="results-bar">
         <div class="summary">

@@ -40,4 +40,15 @@ const props = defineProps<{ to?: string }>()
   outline: 3px solid rgba(99, 102, 241, 0.28);
   outline-offset: 2px;
 }
+
+/* PreviewCard layout: put the grid on the card root so it applies immediately */
+.card.preview {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 84px minmax(0, 1fr);
+}
+
+.card.preview.no-thumb {
+  grid-template-columns: 1fr;
+}
 </style>

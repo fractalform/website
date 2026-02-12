@@ -86,4 +86,10 @@ const features = [
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
+
+@media (max-width: 900px) {
+  .features .container {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
