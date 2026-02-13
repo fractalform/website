@@ -168,11 +168,13 @@ onMounted(() => {
   top: 0;
   z-index: 10;
 
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: #222;
+  color: rgba(255,255,255,0.92);
 
-  border-bottom: 1px solid var(--border);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Variant layouts:
@@ -206,7 +208,7 @@ onMounted(() => {
 }
 
 .brand-link {
-  color: var(--text);
+  color: rgba(255,255,255,0.92);
   text-decoration: none;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -239,9 +241,9 @@ onMounted(() => {
   line-height: 1;
   vertical-align: middle;
 
-  color: var(--text);
+  color: rgba(255,255,255,0.92);
   text-decoration: none;
-  opacity: 0.86;
+  opacity: 0.88;
 
   padding: 0.45rem 0.65rem;
   border-radius: 10px;
@@ -252,12 +254,12 @@ onMounted(() => {
 .link:hover,
 .menu-trigger:hover {
   opacity: 1;
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.10);
 }
 
 .link.router-link-active {
   opacity: 1;
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(99, 102, 241, 0.28);
 }
 
 .menu-trigger {
@@ -292,10 +294,10 @@ onMounted(() => {
   z-index: 60;
 }
 
-.submenu-link {
-  display: block;
-  width: 100%;
-  padding: 0.55rem 0.65rem;
+.submenu {
+  background: #262626;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: var(--shadow-md);
 }
 
 /* Desktop: hover opens + hover bridge prevents flicker */
@@ -321,8 +323,9 @@ onMounted(() => {
   justify-self: end;
 
   margin-right: var(--gutter);
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
   border-radius: 10px;
   padding: 0.45rem 0.65rem;
   cursor: pointer;

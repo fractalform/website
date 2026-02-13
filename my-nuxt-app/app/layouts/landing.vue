@@ -10,6 +10,7 @@
     <main class="content-area">
       <slot />
     </main>
+    <AppFooter variant="landing" />
   </div>
 </template>
 
@@ -20,6 +21,7 @@
 
 .content-area {
   min-width: 0;
+  padding-bottom: var(--footer-h);
 }
 
 /* Landing-only: stack feature cards sooner */

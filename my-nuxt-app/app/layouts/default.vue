@@ -14,6 +14,8 @@
     <main class="content-area">
       <slot />
     </main>
+   <AppFooter variant="default" />
+
   </div>
 </template>
 
@@ -48,6 +50,7 @@
 .content-area {
   grid-area: content;
   min-width: 0;
+  padding-bottom: var(--footer-h);
 }
 
 /* Mobile */
